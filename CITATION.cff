@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use PRATIK Kernel Core, please cite it as below."
+title: "PRATIK Kernel Core — MVP (balanced-ternary, event-driven developmental kernel)"
+abstract: >-
+  A resource-bounded, balanced-ternary, event-driven reference kernel implementing the
+  PRATIK/PEDLER core: autogenous dimensional spawning, resource-modulated persistence and
+  crystallization, and a verification harness proving the recollection theorem and the
+  accommodation/crystallization axioms. CPU (C++20) and CUDA backends, plus a dependency-free
+  interactive 3D visualizer.
+type: software
+version: "1.0.0"
+license: GPL-3.0-or-later
+repository-code: "https://github.com/zistgah/pratik_core_mvp"
+url: "https://zistgah.org/pratik_core_mvp/"
+doi: "10.5281/zenodo.21288232"
+authors:
+  - family-names: Choudhary
+    given-names: Abhishek
+    affiliation: AyeAI
+keywords:
+  - PEDLER
+  - PRATIK
+  - balanced ternary
+  - developmental computing
+  - event-driven learning
+  - non-parametric
+  - AyeAI Triad

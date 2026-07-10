@@ -1,0 +1,16 @@
+{
+  "title": "PRATIK Kernel Core — MVP (balanced-ternary, event-driven developmental kernel)",
+  "version": "1.0.0",
+  "upload_type": "software",
+  "description": "<p>Reference minimum viable implementation of the PRATIK (Participatory Recursive Adaptive Trans-Intelligence Kernel) core for the PEDLER developmental Event Algebra. Computes over balanced ternary T={-1,0,+1} with no floating point in the core path; implements the autogenous spawning operator, a resource-modulated persistence functional and crystallization threshold theta_c = theta0/(E*M), and provisional-dimension evaporation. Ships a CPU (C++20) backend (built and verified), a compilation-ready CUDA backend (Unified Memory, asynchronous streams, atomicAdd dimension claim; not executed in the authoring environment), a verification harness proving the recollection theorem and the accommodation/crystallization axioms plus a 100k-event benchmark, and a dependency-free interactive 3D state visualizer. Author affiliation: AyeAI. Copyright (C) 1993-2026 Abhishek Choudhary. All rights reserved. Licensed GPL-3.0-or-later.</p>",
+  "creators": [{ "name": "Choudhary, Abhishek", "affiliation": "AyeAI" }],
+  "license": "GPL-3.0-or-later",
+  "access_right": "open",
+  "language": "eng",
+  "keywords": ["PEDLER","PRATIK","AyeAI Triad","balanced ternary","developmental computing","event-driven learning","non-parametric","autogenous spawning","edge intelligence","C++20","CUDA"],
+  "related_identifiers": [
+    { "relation": "isSupplementTo", "identifier": "https://zistgah.org/chapter/", "resource_type": "publication-section" },
+    { "relation": "isPartOf",       "identifier": "https://zistgah.org/", "resource_type": "other" },
+    { "relation": "references",     "identifier": "10.5281/zenodo.17497559", "resource_type": "publication" }
+  ]
+}

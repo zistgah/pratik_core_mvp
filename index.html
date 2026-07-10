@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<!--
+  SPDX-License-Identifier: GPL-3.0-or-later
+  Copyright (C) 1993-2026 Abhishek Choudhary. All rights reserved. · AyeAI
+  PRATIK Kernel Core — interactive visualizer. Part of pratik_core_mvp (GPLv3+).
+  A faithful JS port of the C++ state machine (src/cpu_backend.cpp): balanced
+  ternary ⊞/⊙, autogenous spawning *, resource-modulated persistence Π/θ_c,
+  crystallization and evaporation. Dependency-free 3D (canvas 2D projection).
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRATIK Kernel — Live State Visualizer</title>
+<style>
+  :root{
+    --ink:#0a1430; --navy:#0b1e46; --panel:#0f2350; --paper:#f7f4ec;
+    --gold:#c8a24a; --gold-d:#b8912f; --oxblood:#c8465a; --oxblood-d:#7a1f2b;
+    --slate:#7f8fbf; --pos:#c8a24a; --neg:#c8465a; --zero:#586089; --rule:#24356e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--ink); color:#e7ecff; font:14px/1.5 "Spline Sans Mono",ui-monospace,monospace;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  header{
+    padding:.7rem 1rem; border-bottom:1px solid var(--gold); background:linear-gradient(180deg,#0b1e46,#0a1430);
+    display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap;
+  }
+  header h1{font:600 1rem/1.1 Georgia,serif; margin:0; color:#fff; letter-spacing:.02em}
+  header h1 b{color:var(--gold)}
+  header .sub{font-size:.72rem; color:var(--slate); letter-spacing:.14em; text-transform:uppercase}
+  header a{color:var(--gold); text-decoration:none; margin-left:auto; font-size:.72rem}
+  header a:hover{text-decoration:underline}
+  main{flex:1; display:grid; grid-template-columns:1fr 360px; min-height:0}
+  #stage{position:relative; min-width:0}
+  canvas{display:block; width:100%; height:100%; cursor:grab}
+  canvas:active{cursor:grabbing}
+  .legend{position:absolute; left:12px; bottom:12px; font-size:.7rem; color:#c3d0f0;
+    background:rgba(10,20,48,.72); border:1px solid var(--rule); border-radius:8px; padding:.5rem .7rem}
+  .legend .sw{display:inline-block;width:.7em;height:.7em;border-radius:50%;margin-right:.3em;vertical-align:baseline}
+  .hud{position:absolute; right:12px; top:12px; font-size:.72rem; text-align:right; color:#c3d0f0;
+    background:rgba(10,20,48,.72); border:1px solid var(--rule); border-radius:8px; padding:.5rem .7rem}
+  .hud b{color:var(--gold)}
+  aside{border-left:1px solid var(--rule); background:var(--navy); display:flex; flex-direction:column; min-height:0}
+  .controls{padding:.7rem; border-bottom:1px solid var(--rule)}
+  .row{display:flex; gap:.4rem; flex-wrap:wrap; margin:.35rem 0}
+  button{
+    background:var(--panel); color:#e7ecff; border:1px solid var(--rule); border-radius:7px;
+    padding:.42rem .6rem; font:inherit; font-size:.76rem; cursor:pointer; flex:1 1 auto;
+  }
+  button:hover{border-color:var(--gold); color:#fff}
+  button.pri{background:var(--gold-d); border-color:var(--gold); color:#141414; font-weight:600}
+  button.pri:hover{background:var(--gold)}
+  button.ox{border-color:var(--oxblood-d)}
+  button.ox:hover{border-color:var(--oxblood); color:#fff}
+  .sliders label{display:block; font-size:.72rem; color:var(--slate); margin:.5rem 0 .1rem; letter-spacing:.06em}
+  .sliders .val{color:var(--gold); float:right}
+  input[type=range]{width:100%; accent-color:var(--gold)}
+  .stepinfo{padding:.55rem .7rem; background:#0d1b3a; border-bottom:1px solid var(--rule); font-size:.74rem; min-height:2.6rem}
+  .stepinfo b{color:var(--gold)}
+  .inspect{padding:.6rem .7rem; overflow:auto; flex:1; min-height:0}
+  .inspect h3{margin:.8rem 0 .3rem; font:600 .7rem/1 inherit; letter-spacing:.16em; text-transform:uppercase; color:var(--gold-d)}
+  table{width:100%; border-collapse:collapse; font-size:.72rem}
+  th,td{border:1px solid var(--rule); padding:.2rem .35rem; text-align:right}
+  th{color:var(--slate); font-weight:600; text-align:right}
+  td.k{text-align:left; color:#c3d0f0}
+  .prov{color:var(--gold)}
+  .cryst{color:#8fe38f}
+  .kv{display:flex; justify-content:space-between; font-size:.74rem; padding:.12rem 0; border-bottom:1px dotted var(--rule)}
+  .kv b{color:var(--gold)}
+  #log{font-size:.7rem; color:#aab8e6; white-space:pre-wrap; background:#0d1b3a; border:1px solid var(--rule);
+    border-radius:6px; padding:.5rem; height:150px; overflow:auto; margin-top:.4rem}
+  .pass{color:#8fe38f}.fail{color:var(--oxblood)}
+  footer{padding:.4rem 1rem; border-top:1px solid var(--rule); font-size:.66rem; color:var(--slate);
+    display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap}
+  footer a{color:var(--gold-d)}
+  @media (max-width:820px){ main{grid-template-columns:1fr; grid-template-rows:46vh 1fr} aside{border-left:0;border-top:1px solid var(--rule)} }
+</style>
+</head>
+<body>
+<header>
+  <h1><b>PRATIK</b> Kernel — Live State Visualizer</h1>
+  <span class="sub">balanced ternary · autogenous spawning · resource-bounded</span>
+  <a href="https://zistgah.org/" target="_blank" rel="noopener">zistgah.org ↗</a>
+</header>
+
+<main>
+  <section id="stage">
+    <canvas id="c"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="legend">
+      <div><span class="sw" style="background:var(--pos)"></span>+1 activation
+           <span class="sw" style="background:var(--neg);margin-left:.6em"></span>−1 inhibition
+           <span class="sw" style="background:var(--zero);margin-left:.6em"></span>0 poised</div>
+      <div style="margin-top:.25rem">◌ provisional (dashed) · ● crystallized · height = Π · drag to orbit</div>
+    </div>
+  </section>
+
+  <aside>
+    <div class="controls">
+      <div class="row">
+        <button class="pri" id="btn-step">▶ Step</button>
+        <button id="btn-run">⟳ Run</button>
+        <button id="btn-reset">⟲ Reset</button>
+      </div>
+      <div class="row">
+        <button id="btn-cong">＋ congruent</button>
+        <button id="btn-ood" class="ox">✦ OOD event</button>
+        <button id="btn-tick">⌁ tick</button>
+      </div>
+      <div class="row">
+        <button id="btn-evap" class="ox">Evaporation demo</button>
+        <button id="btn-rot">◐ auto-orbit</button>
+      </div>
+      <div class="sliders">
+        <label>E<sub>battery</sub> <span class="val" id="v-bat">1.00</span></label>
+        <input type="range" id="s-bat" min="0.05" max="1" step="0.05" value="1">
+        <label>M<sub>memory</sub> <span class="val" id="v-mem">1.00</span></label>
+        <input type="range" id="s-mem" min="0.05" max="1" step="0.05" value="1">
+      </div>
+    </div>
+
+    <div class="stepinfo" id="stepinfo">Press <b>Step</b> to walk the verification scenario, or drive the kernel by hand.</div>
+
+    <div class="inspect">
+      <div class="kv"><span>D<sub>active</sub></span><b id="i-dact">4</b></div>
+      <div class="kv"><span>θ_c = θ₀ / (E·M)</span><b id="i-theta">0.400</b></div>
+      <div class="kv"><span>spawn events</span><b id="i-spawns">0</b></div>
+
+      <h3>State-space S</h3>
+      <table id="tbl"><thead><tr><th>dim</th><th>state</th><th>class</th><th>Π</th><th>reinf</th></tr></thead><tbody></tbody></table>
+
+      <h3>Grammar G · frustration</h3>
+      <div id="i-gram" style="font-size:.72rem;color:#c3d0f0"></div>
+
+      <h3>Ledger I (tail)</h3>
+      <div id="i-ledger" style="font-size:.72rem;color:#aab8e6"></div>
+
+      <h3>Console</h3>
+      <div id="log"></div>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <span>© 1993–2026 Abhishek Choudhary. All rights reserved. · AyeAI · GPL-3.0-or-later</span>
+  <span>DOI: <a id="doi" href="https://zenodo.org/record/21288232">10.5281/zenodo.21288232</a></span>
+</footer>
+
+<script>
+"use strict";
+/* ---------------- kernel (faithful port of src/cpu_backend.cpp) ------------ */
+const CFG = { Dmax:512, gamma:0.5, theta0:0.4, Pi0:1.0, Pi_floor:0.1, dt:1.0, frust:3, ledgerCap:32 };
+const sign = v => (v>0)-(v<0);
+const boxplus = (a,b)=> sign(a+b);      // dominance / cancellation (saturating)
+const gate    = (a,b)=> a*b;            // ×0 => high impedance
+
+class Pratik {
+  constructor(dInit=4){
+    this.state=[]; this.prov=[]; this.Pi=[]; this.reinf=[]; this.spawnedFlag=[];
+    this.grammar=new Map(); this.frust=new Map(); this.ledger=[];
+    this.battery=1.0; this.memory=1.0; this.dActive=dInit; this.spawnCount=0;
+    this.spawnReq=false; this.pending=0; this.lastSpawn=null;
+    for(let d=0; d<dInit; d++){
+      this.state[d]=(d%2===0)?1:-1; this.prov[d]=false; this.Pi[d]=0; this.reinf[d]=0;
+      this.spawnedFlag[d]=false; this.grammar.set(d,d);
+    }
+  }
+  thetaC(){ return CFG.theta0/Math.max(1e-9,this.battery*this.memory); }
+  snapshot(){ return this.state.slice(0,this.dActive); }
+  resetBaseline(s0){ for(let d=0; d<s0.length && d<this.dActive; d++) this.state[d]=s0[d]; }
+  ingest(e){
+    this.ledger.push(e); if(this.ledger.length>CFG.ledgerCap) this.ledger.shift();
+    if(!this.grammar.has(e.token)){
+      const f=(this.frust.get(e.token)||0)+1; this.frust.set(e.token,f);
+      if(f>=CFG.frust){ this.spawnReq=true; this.pending=e.token; }
+      return {d:-1, v:0};
+    }
+    const d=this.grammar.get(e.token), before=this.state[d];
+    const after=boxplus(before, gate(e.drive,1));
+    this.state[d]=after;
+    if(after===0 && e.drive!==0){
+      const f=(this.frust.get(e.token)||0)+1; this.frust.set(e.token,f);
+      if(f>=CFG.frust){ this.spawnReq=true; this.pending=e.token; }
+    } else if(after!==0){ this.frust.set(e.token,0); this.reinf[d]++; }
+    return {d, v:after};
+  }
+  maybeSpawn(){ if(!this.spawnReq) return false; this.spawnReq=false; this.spawn(this.pending); return true; }
+  spawn(token){
+    if(this.dActive>=CFG.Dmax) return;
+    const dn=this.dActive++;                       // (CUDA path: atomicAdd)
+    this.state[dn]=0; this.prov[dn]=true; this.Pi[dn]=CFG.Pi0; this.reinf[dn]=0; this.spawnedFlag[dn]=true;
+    this.grammar.set(token,dn); this.frust.set(token,0); this.lastSpawn=token; this.spawnCount++;
+  }
+  tick(){
+    const th=this.thetaC();
+    for(let d=this.dActive-1; d>=0; d--){
+      if(!this.prov[d]) continue;
+      this.Pi[d]*=Math.exp(-CFG.gamma*CFG.dt);      // Axiom III
+      if(this.Pi[d]>=th && this.reinf[d]>=1){ this.prov[d]=false; }   // crystallize (Axiom IV)
+      else if(this.Pi[d]<CFG.Pi_floor){
+        if(d===this.dActive-1){ this.prov[d]=false; this.state[d]=0; this.Pi[d]=0; this.reinf[d]=0; this.spawnedFlag[d]=false; this.dActive--; }
+      }
+    }
+  }
+}
+
+/* ---------------- app state ------------------------------------------------ */
+let K = new Pratik(4);
+const OOD = 9999;
+let scenarioIdx = 0, running=false, runTimer=null, autoRot=true, rot=0;
+
+function log(msg, cls){ const el=document.getElementById('log');
+  const line=document.createElement('div'); if(cls) line.className=cls; line.textContent=msg;
+  el.appendChild(line); el.scrollTop=el.scrollHeight; }
+function setStep(html){ document.getElementById('stepinfo').innerHTML=html; }
+
+/* scenario = the verification harness, one action per Step press */
+const scenario = [
+  { name:"1 · initialize", run:()=>{ K=new Pratik(4); log("STEP 1  D_active=4, battery=memory=1.0"); } },
+  { name:"2 · recollection (zero drift)", run:()=>{
+      const base=K.snapshot();
+      const seq=[{token:0,drive:1},{token:1,drive:-1},{token:2,drive:1},{token:3,drive:-1}];
+      const T1=seq.map(e=>K.ingest(e).v).join(",");
+      K.resetBaseline(base);
+      const T2=seq.map(e=>K.ingest(e).v).join(",");
+      const ok=(T1===T2)&&K.dActive===4;
+      log("STEP 2  trajectory ["+T1+"] re-traced ["+T2+"]  Δw=0", ok?"pass":"fail");
+    } },
+  { name:"3 · inject OOD ×3 (persistent 0)", run:()=>{
+      let z=true; for(let i=0;i<3;i++){ const r=K.ingest({token:OOD,drive:(i%2===0)?1:-1}); if(!(r.d===-1&&r.v===0)) z=false; }
+      log("STEP 3  unmapped conflict -> persistent 0-state; frustration="+(K.frust.get(OOD)||0), z?"pass":"fail");
+    } },
+  { name:"4 · autogenous spawn *", run:()=>{
+      const s=K.maybeSpawn();
+      log("STEP 4  spawn="+s+"  D_active 4 -> "+K.dActive+"  (dim "+(K.dActive-1)+" provisional)", (s&&K.dActive===5)?"pass":"fail");
+    } },
+  { name:"5 · reinforce dim 4", run:()=>{
+      K.battery=1; K.memory=1;
+      K.ingest({token:OOD,drive:1}); K.ingest({token:OOD,drive:1});
+      log("STEP 5  reinforced dim4 (reinf="+K.reinf[4]+"), resources healthy θ_c="+K.thetaC().toFixed(3));
+    } },
+  { name:"6 · tick → crystallize", run:()=>{
+      K.tick();
+      const ok=(!K.prov[4]&&K.dActive===5);
+      log("STEP 6  Π(d4)="+(K.Pi[4]||0).toFixed(3)+" ≥ θ_c="+K.thetaC().toFixed(3)+" → crystallized; D_active="+K.dActive, ok?"pass":"fail");
+      log("scenario complete — try the Evaporation demo, or drive it by hand.");
+    } },
+];
+
+/* ---------------- controls ------------------------------------------------- */
+function refreshSliders(){ document.getElementById('s-bat').value=K.battery; document.getElementById('s-mem').value=K.memory;
+  document.getElementById('v-bat').textContent=K.battery.toFixed(2); document.getElementById('v-mem').textContent=K.memory.toFixed(2); }
+
+document.getElementById('btn-step').onclick=()=>{
+  if(scenarioIdx>=scenario.length){ log("(scenario finished — Reset to replay)"); return; }
+  const s=scenario[scenarioIdx++]; setStep("<b>"+s.name+"</b>"); s.run(); refreshSliders(); draw(true);
+};
+document.getElementById('btn-run').onclick=()=>{
+  running=!running; document.getElementById('btn-run').textContent=running?"⏸ Pause":"⟳ Run";
+  if(running){ runTimer=setInterval(()=>{ if(scenarioIdx>=scenario.length){ clearInterval(runTimer); running=false; document.getElementById('btn-run').textContent="⟳ Run"; return; }
+      document.getElementById('btn-step').onclick(); }, 950); }
+  else clearInterval(runTimer);
+};
+document.getElementById('btn-reset').onclick=()=>{ K=new Pratik(4); scenarioIdx=0; running=false;
+  clearInterval(runTimer); document.getElementById('btn-run').textContent="⟳ Run";
+  document.getElementById('log').innerHTML=""; setStep("Reset. Press <b>Step</b> or drive by hand."); refreshSliders(); draw(true); };
+
+let cong=0;
+document.getElementById('btn-cong').onclick=()=>{ const d=cong%4; const r=K.ingest({token:d,drive:(d%2===0)?1:-1}); cong++;
+  log("congruent -> dim"+r.d+" = "+(r.v>0?"+1":r.v<0?"-1":" 0")); draw(true); };
+document.getElementById('btn-ood').onclick=()=>{ const r=K.ingest({token:OOD,drive:(Math.random()<.5?1:-1)});
+  log("OOD event -> "+(r.d<0?"persistent 0 (frust="+(K.frust.get(OOD)||0)+")":"dim"+r.d+" = "+r.v));
+  if(K.maybeSpawn()) log("  * spawned dim"+(K.dActive-1)+"  D_active="+K.dActive,"pass"); draw(true); };
+document.getElementById('btn-tick').onclick=()=>{ const before=K.dActive; K.tick();
+  log("tick  θ_c="+K.thetaC().toFixed(3)+(K.dActive<before?"  → evaporated, D_active="+K.dActive:"")); draw(true); };
+document.getElementById('btn-evap').onclick=()=>{
+  K=new Pratik(4); scenarioIdx=scenario.length; document.getElementById('log').innerHTML="";
+  setStep("<b>Evaporation demo</b> — spawn, starve, watch Π decay past θ_c");
+  for(let i=0;i<3;i++) K.ingest({token:OOD,drive:(i%2===0)?1:-1}); K.maybeSpawn();
+  log("spawned dim"+(K.dActive-1)+"  D_active="+K.dActive);
+  K.battery=0.1; K.memory=1.0; refreshSliders();
+  log("starving: battery→0.10  θ_c="+K.thetaC().toFixed(2)+" (unreachable)");
+  let i=0; const t=setInterval(()=>{ const before=K.dActive; K.tick();
+    log("  tick "+(++i)+": Π(d"+(before-1)+")="+(K.Pi[before-1]||0).toFixed(3)+"  D_active="+K.dActive);
+    draw(true);
+    if(K.dActive<before||i>=8){ clearInterval(t); log("evaporated → D_active="+K.dActive, K.dActive===4?"pass":"fail"); }
+  },650);
+};
+document.getElementById('btn-rot').onclick=()=>{ autoRot=!autoRot; };
+document.getElementById('s-bat').oninput=e=>{ K.battery=+e.target.value; document.getElementById('v-bat').textContent=K.battery.toFixed(2); draw(true); };
+document.getElementById('s-mem').oninput=e=>{ K.memory=+e.target.value; document.getElementById('v-mem').textContent=K.memory.toFixed(2); draw(true); };
+
+/* ---------------- inspector ------------------------------------------------ */
+function updateInspector(){
+  document.getElementById('i-dact').textContent=K.dActive;
+  document.getElementById('i-theta').textContent=K.thetaC().toFixed(3);
+  document.getElementById('i-spawns').textContent=K.spawnCount;
+  const tb=document.querySelector('#tbl tbody'); tb.innerHTML="";
+  for(let d=0; d<K.dActive; d++){
+    const cls=K.prov[d]?"prov":(K.spawnedFlag[d]?"cryst":"");
+    const label=K.prov[d]?"prov":(K.spawnedFlag[d]?"cryst":"base");
+    const tr=document.createElement('tr');
+    tr.innerHTML="<td class='k'>d"+d+"</td><td>"+(K.state[d]>0?"+1":K.state[d]<0?"−1":"0")+
+      "</td><td class='"+cls+"'>"+label+"</td><td>"+(K.Pi[d]?K.Pi[d].toFixed(3):"—")+"</td><td>"+K.reinf[d]+"</td>";
+    tb.appendChild(tr);
+  }
+  let g=""; K.grammar.forEach((v,k)=>{ g+=(k===OOD?"OOD":k)+"→d"+v+"  "; });
+  let fr=""; K.frust.forEach((v,k)=>{ if(v>0) fr+=(k===OOD?"OOD":k)+":"+v+"  "; });
+  document.getElementById('i-gram').textContent=g+(fr?("   [frust "+fr+"]"):"");
+  document.getElementById('i-ledger').textContent=K.ledger.slice(-8).map(e=>(e.token===OOD?"OOD":e.token)+(e.drive>0?"+":e.drive<0?"−":"0")).join("  ")||"—";
+  document.getElementById('hud').innerHTML="D<sub>active</sub> <b>"+K.dActive+"</b> · θ_c <b>"+K.thetaC().toFixed(2)+"</b> · Π-nodes <b>"+K.spawnedFlag.slice(0,K.dActive).filter(Boolean).length+"</b>";
+}
+
+/* ---------------- dependency-free 3D ---------------------------------------- */
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+let W=0,H=0, yaw=0.7, pitch=-0.5, dragging=false, lx=0,ly=0;
+const PHI=Math.PI*(3-Math.sqrt(5));   // golden angle (phyllotaxis layout)
+function resize(){ const r=cv.getBoundingClientRect(); W=cv.width=r.width*devicePixelRatio; H=cv.height=r.height*devicePixelRatio; }
+window.addEventListener('resize', ()=>{resize();draw(true);});
+cv.addEventListener('mousedown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;});
+window.addEventListener('mouseup',()=>dragging=false);
+window.addEventListener('mousemove',e=>{ if(!dragging)return; yaw+=(e.clientX-lx)*0.01; pitch+=(e.clientY-ly)*0.01;
+  pitch=Math.max(-1.4,Math.min(0.4,pitch)); lx=e.clientX; ly=e.clientY; draw(true); });
+cv.addEventListener('touchstart',e=>{dragging=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY;},{passive:true});
+cv.addEventListener('touchmove',e=>{ if(!dragging)return; yaw+=(e.touches[0].clientX-lx)*0.01; pitch+=(e.touches[0].clientY-ly)*0.01;
+  pitch=Math.max(-1.4,Math.min(0.4,pitch)); lx=e.touches[0].clientX; ly=e.touches[0].clientY; draw(true);},{passive:true});
+
+function posFor(d){ const a=d*PHI, r=(3.0+0.42*d)*0.55;
+  let y; if(K.spawnedFlag[d]) y = K.prov[d] ? 0.5+3.4*(K.Pi[d]||0) : 3.2;  // provisional rises/decays with Π; crystallized locks high
+  else y = 1.0;
+  return {x:r*Math.cos(a+rot), z:r*Math.sin(a+rot), y}; }
+function rotate(p){ const cy=Math.cos(yaw),sy=Math.sin(yaw); let x=p.x*cy-p.z*sy, z=p.x*sy+p.z*cy, y=p.y;
+  const cx=Math.cos(pitch),sx=Math.sin(pitch); let y2=y*cx-z*sx, z2=y*sx+z*cx; return {x,y:y2,z:z2}; }
+function project(p){ const D=13, f=D/(D-p.z), U=Math.min(W,H)*0.16; return {x:W/2+p.x*f*U, y:H/2-p.y*f*U + H*0.14, s:f}; }
+const COL={ 1:'#c8a24a', 0:'#586089', '-1':'#c8465a' };
+
+function draw(force){
+  if(!W) resize();
+  ctx.clearRect(0,0,W,H);
+  // ground grid
+  ctx.strokeStyle='rgba(60,80,150,.25)'; ctx.lineWidth=1;
+  for(let gx=-5; gx<=5; gx++){
+    const a=rotate({x:gx*0.8,y:0,z:-4}), b=rotate({x:gx*0.8,y:0,z:4});
+    const pa=project(a), pb=project(b); ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke();
+    const c=rotate({x:-4,y:0,z:gx*0.8}), e=rotate({x:4,y:0,z:gx*0.8});
+    const pc=project(c), pe=project(e); ctx.beginPath(); ctx.moveTo(pc.x,pc.y); ctx.lineTo(pe.x,pe.y); ctx.stroke();
+  }
+  // nodes, depth-sorted
+  const nodes=[];
+  for(let d=0; d<K.dActive; d++){ const base=posFor(d); const rr=rotate(base); const pr=project(rr);
+    const foot=project(rotate({x:base.x,y:0,z:base.z}));
+    nodes.push({d,pr,foot,z:rr.z,base}); }
+  nodes.sort((a,b)=>a.z-b.z);
+  for(const n of nodes){
+    const d=n.d, col=COL[K.state[d]] || '#586089';
+    // stem (reads Π height)
+    ctx.strokeStyle='rgba(140,160,220,.35)'; ctx.lineWidth=1.4*devicePixelRatio;
+    ctx.beginPath(); ctx.moveTo(n.foot.x,n.foot.y); ctx.lineTo(n.pr.x,n.pr.y); ctx.stroke();
+    const R=Math.max(6, 15*n.pr.s)*devicePixelRatio;
+    // provisional ring (dashed) or crystallized ring (solid gold)
+    if(K.prov[d]){ ctx.setLineDash([5,4]); ctx.strokeStyle=col; ctx.lineWidth=2*devicePixelRatio;
+      ctx.beginPath(); ctx.arc(n.pr.x,n.pr.y,R+5*devicePixelRatio,0,7); ctx.stroke(); ctx.setLineDash([]); }
+    else if(K.spawnedFlag[d]){ ctx.strokeStyle='#c8a24a'; ctx.lineWidth=2.5*devicePixelRatio;
+      ctx.beginPath(); ctx.arc(n.pr.x,n.pr.y,R+5*devicePixelRatio,0,7); ctx.stroke(); }
+    // node sphere
+    const g=ctx.createRadialGradient(n.pr.x-R*0.3,n.pr.y-R*0.3,R*0.2,n.pr.x,n.pr.y,R);
+    g.addColorStop(0,'#ffffff'); g.addColorStop(0.25,col); g.addColorStop(1,'#0a1430');
+    ctx.globalAlpha=K.prov[d]?0.82:1; ctx.fillStyle=g;
+    ctx.beginPath(); ctx.arc(n.pr.x,n.pr.y,R,0,7); ctx.fill(); ctx.globalAlpha=1;
+    // label
+    ctx.fillStyle='#c3d0f0'; ctx.font=(11*devicePixelRatio)+"px monospace"; ctx.textAlign='center';
+    ctx.fillText("d"+d, n.pr.x, n.pr.y-R-6*devicePixelRatio);
+    if(K.spawnedFlag[d]){ ctx.fillStyle='#c8a24a'; ctx.font=(9*devicePixelRatio)+"px monospace";
+      ctx.fillText((K.prov[d]?"Π "+(K.Pi[d]||0).toFixed(2):"◆"), n.pr.x, n.pr.y+R+13*devicePixelRatio); }
+  }
+  updateInspector();
+}
+function animate(){ if(autoRot){ rot+=0.0035; draw(); } requestAnimationFrame(animate); }
+resize(); refreshSliders(); setStep("Press <b>Step</b> to walk the verification scenario, or drive the kernel by hand."); draw(true); animate();
+</script>
+</body>
+</html>

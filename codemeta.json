@@ -1,0 +1,18 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "PRATIK Kernel Core — MVP",
+  "description": "Resource-bounded, balanced-ternary, event-driven reference kernel for PEDLER/PRATIK: autogenous dimensional spawning, resource-modulated persistence and crystallization, verification harness (recollection theorem + accommodation/crystallization axioms), CPU (C++20) and CUDA backends, and a dependency-free interactive 3D visualizer.",
+  "version": "1.0.0",
+  "license": "https://spdx.org/licenses/GPL-3.0-or-later.html",
+  "codeRepository": "https://github.com/zistgah/pratik_core_mvp",
+  "url": "https://zistgah.org/pratik_core_mvp/",
+  "identifier": "10.5281/zenodo.21288232",
+  "programmingLanguage": ["C++", "CUDA", "JavaScript"],
+  "runtimePlatform": "C++20; CUDA sm_80+",
+  "keywords": ["PEDLER","PRATIK","balanced ternary","developmental computing","event-driven learning","non-parametric","AyeAI Triad"],
+  "author": [{ "@type": "Person", "givenName": "Abhishek", "familyName": "Choudhary", "affiliation": { "@type": "Organization", "name": "AyeAI" } }],
+  "copyrightHolder": { "@type": "Person", "name": "Abhishek Choudhary" },
+  "copyrightYear": 2026,
+  "isPartOf": "https://zistgah.org/"
+}

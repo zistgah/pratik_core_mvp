@@ -1,0 +1,16 @@
+# build artifacts
+/build/
+pratik_mvp
+pratik_mvp_cuda
+*.o
+*.obj
+*.exe
+# DOI / provenance working files
+/.work*/
+/.doi-package/
+result*.json
+*.zip
+*.ots
+# editor / OS
+.DS_Store
+*.swp
