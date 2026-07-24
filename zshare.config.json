@@ -1,0 +1,14 @@
+{
+  "_copyright": "© 1993–2026 Abhishek Choudhary. All rights reserved.",
+  "title": "PRATIK Kernel — live state visualiser",
+  "short": "PRATIK",
+  "text": "PRATIK Kernel — Live State Visualizer",
+  "bg": "#0a1430",
+  "fg": "#c8a24a",
+  "hashKey": "s",
+  "sw": "sw.js",
+  "whatsapp": true,
+  "card": true,
+  "stamp": true,
+  "installHint": true
+}
