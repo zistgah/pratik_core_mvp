@@ -1,0 +1,21 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "zistgah/pratik_core_mvp",
+      "digest": {
+        "sha1": "909950a"
+      }
+    }
+  ],
+  "predicateType": "https://project-ilm.org/attestations/candor/v1",
+  "predicate": {
+    "action": "PUSH",
+    "reason": "pwa",
+    "utc": "2026-07-24T09:47:50.045751Z",
+    "actor": "human, typed at the terminal",
+    "tool": "seed_pwa.sh",
+    "ayesha1": null,
+    "copyright": "© 1993–2026 Abhishek Choudhary. All rights reserved."
+  }
+}
